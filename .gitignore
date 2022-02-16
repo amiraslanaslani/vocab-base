@@ -2,3 +2,5 @@ vocab.json
 venv
 .idea
 __pycache__
+*.json
+build

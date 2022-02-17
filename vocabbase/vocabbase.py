@@ -8,8 +8,8 @@ API_DATA_RETRIEVER = lambda word: {}
 
 
 class VocabBase:
-    def __init__(self):
-        self.db = TinyDB(VOCAB_BASE_FILE)
+    def __init__(self, file=VOCAB_BASE_FILE):
+        self.db = TinyDB(file)
         self.q = Query()
 
     @staticmethod
@@ -42,8 +42,10 @@ class WordSelector:
         self.vb = vocab_base
         self.active_words = min_active_words
         self.final_stage = final_stage
+        self.lists = {}
+        self.lists_len = {}
 
-    def get_list(self):
+    def create_list(self, id):
         current_timestamp = int(datetime.now().timestamp())
         rlist = self.vb.db.search((self.vb.q.next_show <= current_timestamp) & (self.vb.q.stage <= self.final_stage))
         needed = max(self.active_words - len(rlist), 0)
@@ -52,7 +54,23 @@ class WordSelector:
             choices = random.choices(result, k=min(needed, len(result)))
             rlist += choices
         random.shuffle(rlist)
-        return [Word(word, self.vb) for word in rlist]
+        self.lists[id] = [Word(word, self.vb) for word in rlist]
+        self.lists_len[id] = len(self.lists[id])
+
+    def get_list(self, complete: bool=False, id=1):
+        if id not in self.lists:
+            self.create_list(id)
+        if complete:
+            return self.lists[id]
+        return self.lists[id][:self.lists_len[id]]
+
+    def iterate_list(self, id=1):
+        words_list = self.get_list(complete=True, id=id)
+        for item in words_list:
+            yield item
+
+    def repeat_word(self, word: "Word", list_id=1):
+        self.get_list(complete=True, id=list_id).append(word)
 
 
 class Word:
@@ -94,7 +112,16 @@ class Word:
 
 
 if __name__ == "__main__":
-    vb = VocabBase()
+    vb = VocabBase("./test.json")
     vb.add("Hello")
     vb.add("World")
-    print('hello!!')
+    vb.add("Friends")
+    vb.add("Life")
+    vb.add("Draft")
+    vb.add("Walk")
+    vb.add("Magic")
+    ws = WordSelector(vb, 5, 3)
+    for idx, word in enumerate(ws.iterate_list()):
+        print(idx, word)
+        if idx in [0, 2]:
+            ws.repeat_word(word)

@@ -38,10 +38,11 @@ def start_learning():
         settings.get(settings.KEY_FINAL_STAGE)
     )
 
-    for word in ws.get_list():
+    for word in ws.iterate_list():
         clear()
         print(style(
-            "    [ESC] Back to Menu    [1] Wrong Answer    [~`] Correct Answer    [SPACE] Show Meaning",
+            "    [ESC] Back to Menu    [1] Wrong Answer    [~`] Correct Answer    [SPACE] Show Meaning\n" +
+            "    You should press keys twice (Designed in this way to prevent you from wrong key presses)\n",
             styles.GREEN) + "\n\n"
         )
 
@@ -56,6 +57,7 @@ def start_learning():
                     return
                 elif new == b'1':
                     word.show(False)
+                    ws.repeat_word(word)
                     break
                 elif new == b'`':  # `~
                     word.show(True)

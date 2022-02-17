@@ -1,5 +1,6 @@
 from msvcrt import getch
 
+from version import __version__
 from cli.setting import Settings
 from cli.style import style, styles
 from cli.utils import clear, get_details
@@ -29,6 +30,38 @@ TITLE_ART = """
 
 vb: VocabBase = None
 settings = Settings()
+
+
+def about_page():
+    clear()
+    print(style(
+        "    [ANY KEY] Back to Menu\n",
+        styles.GREEN) + "\n"
+    )
+    print(f"""
+    ██╗░░░██╗░█████╗░░█████╗░░█████╗░██████╗░
+    ██║░░░██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗
+    ╚██╗░██╔╝██║░░██║██║░░╚═╝███████║██████╦╝
+    ░╚████╔╝░██║░░██║██║░░██╗██╔══██║██╔══██╗
+    ░░╚██╔╝░░╚█████╔╝╚█████╔╝██║░░██║██████╦╝
+    ░░░╚═╝░░░░╚════╝░░╚════╝░╚═╝░░╚═╝╚═════╝░
+    
+    ██████╗░░█████╗░░██████╗███████╗
+    ██╔══██╗██╔══██╗██╔════╝██╔════╝
+    ██████╦╝███████║╚█████╗░█████╗░░
+    ██╔══██╗██╔══██║░╚═══██╗██╔══╝░░
+    ██████╦╝██║░░██║██████╔╝███████╗
+    ╚═════╝░╚═╝░░╚═╝╚═════╝░╚══════╝
+    
+    
+    Vocab Base -- version {__version__}
+    Created 4U with ♥ by A. A. Aslani
+    
+    https://amiraslan.ir
+    https://github.com/amiraslanaslani/vocab-base
+    """)
+    getch()
+    return
 
 
 def start_learning():
@@ -136,7 +169,7 @@ def menu(vocabbase_instance: VocabBase):
     selected_item = 0
     while True:
         clear()
-        print(style("    [W] Up    [S] Down    [ENTER] Select", styles.GREEN) + "\n\n")
+        print(style("    [W] Up    [S] Down    [ENTER] Select    [A] About", styles.GREEN) + "\n\n")
         print(TITLE_ART)
         print(menu_items(selected_item))
         key = getch()
@@ -153,3 +186,5 @@ def menu(vocabbase_instance: VocabBase):
                 clear()
                 print("Bye Bye...")
                 break
+        elif key == b'a' or key == b'A':
+            about_page()

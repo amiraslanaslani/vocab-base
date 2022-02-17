@@ -1,30 +1,34 @@
 from msvcrt import getch
 
+from cli.setting import Settings
 from cli.style import style, styles
 from cli.utils import clear, get_details
-from main import vb, settings
 from vocabbase import vocabbase
+from vocabbase.vocabbase import VocabBase
 
 AMAZING_ART = """
-   $$$$$$\                                    $$\                     $$\ 
-  $$  __$$\                                   \__|                    $$ |
-  $$ /  $$ |$$$$$$\$$$$\   $$$$$$\  $$$$$$$$\ $$\ $$$$$$$\   $$$$$$\  $$ |
-  $$$$$$$$ |$$  _$$  _$$\  \____$$\ \____$$  |$$ |$$  __$$\ $$  __$$\ $$ |
-  $$  __$$ |$$ / $$ / $$ | $$$$$$$ |  $$$$ _/ $$ |$$ |  $$ |$$ /  $$ |\__|
+   $$$$$$\\                                    $$\\                     $$\\ 
+  $$  __$$\\                                   \\__|                    $$ |
+  $$ /  $$ |$$$$$$\\$$$$\\   $$$$$$\\  $$$$$$$$\\ $$\\ $$$$$$$\\   $$$$$$\\  $$ |
+  $$$$$$$$ |$$  _$$  _$$\\  \\____$$\\ \\____$$  |$$ |$$  __$$\\ $$  __$$\\ $$ |
+  $$  __$$ |$$ / $$ / $$ | $$$$$$$ |  $$$$ _/ $$ |$$ |  $$ |$$ /  $$ |\\__|
   $$ |  $$ |$$ | $$ | $$ |$$  __$$ | $$  _/   $$ |$$ |  $$ |$$ |  $$ |    
-  $$ |  $$ |$$ | $$ | $$ |\$$$$$$$ |$$$$$$$$\ $$ |$$ |  $$ |\$$$$$$$ |$$\ 
-  \__|  \__|\__| \__| \__| \_______|\________|\__|\__|  \__| \____$$ |\__|
-                                                            $$\   $$ |    
-                                                            \$$$$$$  |    
-                                                             \______/     
+  $$ |  $$ |$$ | $$ | $$ |\\$$$$$$$ |$$$$$$$$\\ $$ |$$ |  $$ |\\$$$$$$$ |$$\\ 
+  \\__|  \\__|\\__| \\__| \\__| \\_______|\\________|\\__|\\__|  \\__| \\____$$ |\\__|
+                                                            $$\\   $$ |    
+                                                            \\$$$$$$  |    
+                                                             \\______/     
 """
 TITLE_ART = """
    __     __              _       ____                 
-   \ \   / /__   ___ __ _| |__   | __ )  __ _ ___  ___ 
-    \ \ / / _ \ / __/ _` | '_ \  |  _ \ / _` / __|/ _ \\
-     \ V / (_) | (_| (_| | |_) | | |_) | (_| \__ \  __/
-      \_/ \___/ \___\__,_|_.__/  |____/ \__,_|___/\___|
+   \\ \\   / /__   ___ __ _| |__   | __ )  __ _ ___  ___ 
+    \\ \\ / / _ \\ / __/ _` | '_ \\  |  _ \\ / _` / __|/ _ \\
+     \\ V / (_) | (_| (_| | |_) | | |_) | (_| \\__ \\  __/
+      \\_/ \\___/ \\___\\__,_|_.__/  |____/ \\__,_|___/\\___|
 """
+
+vb: VocabBase = None
+settings = Settings()
 
 
 def start_learning():
@@ -36,11 +40,13 @@ def start_learning():
 
     for word in ws.get_list():
         clear()
-        print(style("    [ESC] Back to Menu    [1] Wrong Answer    [~`] Correct Answer    [SPACE] Show Meaning"
-                    , styles.GREEN) + "\n\n")
+        print(style(
+            "    [ESC] Back to Menu    [1] Wrong Answer    [~`] Correct Answer    [SPACE] Show Meaning",
+            styles.GREEN) + "\n\n"
+        )
+
         main_str, meanings = get_details(word)
         print(main_str)
-
         prev = getch()
         meaning_shown = False
         while True:
@@ -65,33 +71,33 @@ def start_learning():
 
 
 def add_words():
-    def strip_word(word: str):
-        return word.lower().strip()
+    def strip_word(w: str):
+        return w.lower().strip()
 
-    def intr(word: str) -> int:
-        if word == "":
+    def intr(w: str) -> int:
+        if w == "":
             print(style("    [ESC] Back to main menu   [ANY OTHER KEY] Continue", styles.GREEN) + "\n\n")
-            key = getch()
-            if key == b'\x1b':  # ESC
+            k = getch()
+            if k == b'\x1b':  # ESC
                 return 1
             else:
                 return -1  # repeat
         return 0
 
     def get_words():
-        word = strip_word(input("    Enter your word:"))
-        intr_result = intr(word)
+        w = strip_word(input("    Enter your word: "))
+        intr_result = intr(w)
         if intr_result == 1:
             return "+", "-", True
         elif intr_result == -1:
             return get_words()
-        repeat = strip_word(input("    Enter your word, again:"))
-        intr_result = intr(repeat)
+        r = strip_word(input("    Enter your word, again: "))
+        intr_result = intr(r)
         if intr_result == 1:
             return "+", "-", True
         elif intr_result == -1:
             return get_words()
-        return word, repeat, False
+        return w, r, False
 
     while True:
         clear()
@@ -102,7 +108,8 @@ def add_words():
         while word != repeat:
             if inter:
                 return
-            print("    Inputs are not match.")
+            # print("    Inputs are not match.")
+            print(style("    Inputs are not match.", styles.RED))
             word, repeat, inter = get_words()
 
         if vb.add(word):
@@ -115,7 +122,10 @@ def add_words():
             return
 
 
-def menu():
+def menu(vocabbase_instance: VocabBase):
+    global vb
+    vb = vocabbase_instance
+
     def menu_items(item: int):
         items = [' ', ' ', ' ']
         items[item] = 'X'
@@ -141,4 +151,3 @@ def menu():
                 clear()
                 print("Bye Bye...")
                 break
-

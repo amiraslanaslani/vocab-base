@@ -22,7 +22,8 @@ def get_details(word: vocabbase.Word):
         for meaning in word.data['meanings']:
             definition_str = ""
             for definition in meaning['definitions']:
-                definition_str += f"    {definition['definition']}\n    Example: {definition['example']}"
+                example = "\n    Example: " + definition['example'] if ('example' in definition) else ''
+                definition_str += f"    {definition['definition']}{example}"
                 definition_str += "\n\n"
             meanings += f"    [ {meaning['partOfSpeech']} ]\n" + definition_str
             meanings += "\n"

@@ -95,13 +95,19 @@ class Word:
     def remove(self):
         self.vb.remove(self.word)
 
-    def show(self, correct: bool):
+    def show(self, correct: bool, delta_func=None):
         self.stage = self.stage + 1 if correct else 0
+        if correct:
+            if not callable(delta_func):
+                delta_func = lambda stage: timedelta(days=self.stage)
+        else:
+            delta_func = lambda stage: timedelta(days=0)
+
         self.update({
             'shown': True,
             'last_shown': int(datetime.now().timestamp()),
             'stage': self.stage,
-            'next_show': int((datetime.now() + timedelta(days=self.stage)).timestamp()),
+            'next_show': int((datetime.now() + delta_func(self.stage)).timestamp()),
         })
 
     def __str__(self):

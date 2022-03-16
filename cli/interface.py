@@ -27,6 +27,17 @@ TITLE_ART = """
      \\ V / (_) | (_| (_| | |_) | | |_) | (_| \\__ \\  __/
       \\_/ \\___/ \\___\\__,_|_.__/  |____/ \\__,_|___/\\___|
 """
+SETTING_ART = """
+      ██████ ▓█████▄▄▄█████▓▄▄▄█████▓ ██▓ ███▄    █   ▄████ 
+    ▒██    ▒ ▓█   ▀▓  ██▒ ▓▒▓  ██▒ ▓▒▓██▒ ██ ▀█   █  ██▒ ▀█▒
+    ░ ▓██▄   ▒███  ▒ ▓██░ ▒░▒ ▓██░ ▒░▒██▒▓██  ▀█ ██▒▒██░▄▄▄░
+      ▒   ██▒▒▓█  ▄░ ▓██▓ ░ ░ ▓██▓ ░ ░██░▓██▒  ▐▌██▒░▓█  ██▓
+    ▒██████▒▒░▒████▒ ▒██▒ ░   ▒██▒ ░ ░██░▒██░   ▓██░░▒▓███▀▒
+    ▒ ▒▓▒ ▒ ░░░ ▒░ ░ ▒ ░░     ▒ ░░   ░▓  ░ ▒░   ▒ ▒  ░▒   ▒ 
+    ░ ░▒  ░ ░ ░ ░  ░   ░        ░     ▒ ░░ ░░   ░ ▒░  ░   ░ 
+    ░  ░  ░     ░    ░        ░       ▒ ░   ░   ░ ░ ░ ░   ░ 
+          ░     ░  ░                  ░           ░       ░  
+"""
 
 vb: VocabBase = None
 settings = Settings()
@@ -157,14 +168,66 @@ def add_words():
             return
 
 
+def setting_page():
+    keys = [
+        settings.KEY_MIN_ACTIVE_WORDS,
+        settings.KEY_FINAL_STAGE
+    ]
+
+    values = [
+        settings.get(keys[0]),
+        settings.get(keys[1])
+    ]
+
+    def menu_items(item: int):
+        items_detail = ["", ""]
+        items = ['  ', '  ']
+        items[item] = '-►'
+        return f"    {items[0]} Minimum active words at the moment       [ {values[0]:2} ]\n" + \
+               f"    {items[1]} Final stage of a learned word            [ {values[1]:2} ]\n", items_detail[item]
+
+    selected_item = 0
+    message = ""
+    while True:
+        clear()
+        print(style(
+            "    [ESC] Main menu    [SPACE] Save    [W] Up    [S] Down\n    [A] Decrease Value   [D] Increase Value",
+            styles.GREEN
+        ) + "\n\n")
+
+        print(SETTING_ART)
+
+        print(message + "\n")
+        items, desc = menu_items(selected_item)
+        print(items + "\n\n\n" + desc)
+        key = getch()
+        if key == b'w' or key == b'W':
+            selected_item = max(0, selected_item - 1)
+        elif key == b's' or key == b'S':
+            selected_item = min(1, selected_item + 1)
+        elif key == b'a' or key == b'A':  # decrease value
+            values[selected_item] = max(values[selected_item] - 1, 0)
+            message = style("    Your changes are not saved, yet.", styles.RED)
+        elif key == b'd' or key == b'D':  # increase value
+            values[selected_item] = values[selected_item] + 1
+            message = style("    Your changes are not saved, yet.", styles.RED)
+        elif key == b' ':  # Save
+            for key, value in zip(keys, values):
+                settings.set(key, value)
+            message = style("    Changes are saved successfully!", styles.GREEN)
+        elif key == b'\x1b':
+            return
+
+
 def menu(vocabbase_instance: VocabBase):
     global vb
     vb = vocabbase_instance
 
     def menu_items(item: int):
-        items = [' ', ' ', ' ']
+        items = [' ', ' ', ' ', ' ']
         items[item] = 'X'
-        return f"\n\n\n    [{items[0]}] Start Learning :)\n    [{items[1]}] Add New Words\n    [{items[2]}] Exit\n\n\n"
+        return f"\n\n\n    [{items[0]}] Start Learning :)\n    [{items[1]}] Add New Words\n" + \
+               f"    [{items[2]}] Setting\n    [{items[3]}] Exit\n\n\n"
 
     selected_item = 0
     while True:
@@ -176,13 +239,15 @@ def menu(vocabbase_instance: VocabBase):
         if key == b'w' or key == b'W':
             selected_item = max(0, selected_item - 1)
         elif key == b's' or key == b'S':
-            selected_item = min(2, selected_item + 1)
+            selected_item = min(3, selected_item + 1)
         elif key == b'\r':
             if selected_item == 0:
                 start_learning()
             elif selected_item == 1:
                 add_words()
             elif selected_item == 2:
+                setting_page()
+            elif selected_item == 3:
                 clear()
                 print("Bye Bye...")
                 break

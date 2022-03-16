@@ -6,7 +6,7 @@ def dictionaryapi_dev(word: str) -> dict:
     response = requests.get(url).json()
     if isinstance(response, list) and len(response) > 0:
         return {
-            'phonetic': response[0]['phonetic'],
+            'phonetic': response[0]['phonetic'] if 'phonetic' in response[0] else "",
             'meanings': response[0]['meanings'],
         }
     else:

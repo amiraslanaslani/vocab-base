@@ -1,7 +1,7 @@
 from msvcrt import getch
 
 from version import __version__
-from cli.setting import Settings
+from setting import Settings
 from cli.style import style, styles
 from cli.utils import clear, get_details
 from vocabbase import vocabbase
@@ -40,7 +40,7 @@ SETTING_ART = """
 """
 
 vb: VocabBase = None
-settings = Settings()
+settings = Settings.getInstance()
 
 
 def about_page():

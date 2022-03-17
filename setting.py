@@ -1,19 +1,38 @@
 from tinydb import TinyDB, Query
 
+from vocabbase.vocabbase import VOCAB_BASE_FILE
+
 
 SETTINGS_FILE = './setting.json'
+instance = None
 
 
 class Settings:
+
     KEY_MIN_ACTIVE_WORDS = "min_active_words"
     KEY_FINAL_STAGE = "final_stage"
+    KEY_SELECTED_DB = "selected_db"
 
     __defaults = {
         KEY_MIN_ACTIVE_WORDS: 10,
         KEY_FINAL_STAGE: 7,
+        KEY_SELECTED_DB: VOCAB_BASE_FILE,
     }
 
+    @staticmethod 
+    def getInstance(): # Singleton instance
+        global instance
+        if instance is None:
+            Settings()
+        return instance
+
     def __init__(self):
+        global instance
+        if instance != None:
+            raise Exception("This class is a singleton!")
+        else:
+            instance = self
+
         self.db = TinyDB(SETTINGS_FILE)
         self.q = Query()
         for key in self.__defaults:
@@ -32,6 +51,7 @@ class Settings:
     def contains(self, key: str):
         return self.db.contains(self.q.key == key)
 
+    
 
 if __name__ == "__main__":
     settings = Settings()

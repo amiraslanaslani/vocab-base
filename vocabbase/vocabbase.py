@@ -3,12 +3,12 @@ import random
 
 from tinydb import TinyDB, Query
 
-VOCAB_BASE_FILE = './vocab.json'
+
 API_DATA_RETRIEVER = lambda word: {}
 
 
 class VocabBase:
-    def __init__(self, file=VOCAB_BASE_FILE):
+    def __init__(self, file):
         self.db = TinyDB(file)
         self.q = Query()
 

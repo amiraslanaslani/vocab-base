@@ -1,7 +1,8 @@
 from msvcrt import getch
 
 from version import __version__
-from setting import Settings
+from setting.setting import SettingValueController, Settings
+from setting.controllers import FinalStageController, MinActiveWordsController, SelectedDBController
 from cli.style import style, styles
 from cli.utils import clear, get_details
 from vocabbase import vocabbase
@@ -40,7 +41,7 @@ SETTING_ART = """
 """
 
 vb: VocabBase = None
-settings = Settings.getInstance()
+settings = Settings.get_instance()
 
 
 def about_page():
@@ -169,22 +170,24 @@ def add_words():
 
 
 def setting_page():
+    svc = SettingValueController(settings)
+    svc.add_controller(MinActiveWordsController)
+    svc.add_controller(FinalStageController)
+    svc.add_controller(SelectedDBController)
+    
     keys = [
         settings.KEY_MIN_ACTIVE_WORDS,
-        settings.KEY_FINAL_STAGE
-    ]
-
-    values = [
-        settings.get(keys[0]),
-        settings.get(keys[1])
+        settings.KEY_FINAL_STAGE,
+        settings.KEY_SELECTED_DB,
     ]
 
     def menu_items(item: int):
-        items_detail = ["", ""]
-        items = ['  ', '  ']
+        items_detail = ["", "", ""]
+        items = ['  ', '  ', '  ']
         items[item] = '-►'
-        return f"    {items[0]} Minimum active words at the moment       [ {values[0]:2} ]\n" + \
-               f"    {items[1]} Final stage of a learned word            [ {values[1]:2} ]\n", items_detail[item]
+        return f"    {items[0]} Minimum active words at the moment       [ {svc.get(0).get_value():2} ]\n" + \
+               f"    {items[1]} Final stage of a learned word            [ {svc.get(1).get_value():2} ]\n" + \
+               f"    {items[2]} Selected VB (vocab base)                 [ {svc.get(2).get_value():2} ]\n" , items_detail[item]
 
     selected_item = 0
     message = ""
@@ -194,7 +197,6 @@ def setting_page():
             "    [ESC] Main menu    [SPACE] Save    [W] Up    [S] Down\n    [A] Decrease Value   [D] Increase Value",
             styles.GREEN
         ) + "\n\n")
-
         print(SETTING_ART)
 
         print(message + "\n")
@@ -204,36 +206,40 @@ def setting_page():
         if key == b'w' or key == b'W':
             selected_item = max(0, selected_item - 1)
         elif key == b's' or key == b'S':
-            selected_item = min(1, selected_item + 1)
+            selected_item = min(2, selected_item + 1)
         elif key == b'a' or key == b'A':  # decrease value
-            values[selected_item] = max(values[selected_item] - 1, 0)
+            svc.get(selected_item).previous()
             message = style("    Your changes are not saved, yet.", styles.RED)
         elif key == b'd' or key == b'D':  # increase value
-            values[selected_item] = values[selected_item] + 1
+            svc.get(selected_item).next()
             message = style("    Your changes are not saved, yet.", styles.RED)
         elif key == b' ':  # Save
-            for key, value in zip(keys, values):
-                settings.set(key, value)
+            svc.save()
             message = style("    Changes are saved successfully!", styles.GREEN)
         elif key == b'\x1b':
             return
 
 
-def menu(vocabbase_instance: VocabBase):
-    global vb
-    vb = vocabbase_instance
-
+def menu():
     def menu_items(item: int):
         items = [' ', ' ', ' ', ' ']
         items[item] = 'X'
-        return f"\n\n\n    [{items[0]}] Start Learning :)\n    [{items[1]}] Add New Words\n" + \
+        return f"\n    [{items[0]}] Start Learning :)\n    [{items[1]}] Add New Words\n" + \
                f"    [{items[2]}] Setting\n    [{items[3]}] Exit\n\n\n"
+
+    def reload_vocabbase():
+        global vb
+        vb = VocabBase(settings.get(settings.KEY_SELECTED_DB))
 
     selected_item = 0
     while True:
         clear()
-        print(style("    [W] Up    [S] Down    [ENTER] Select    [A] About", styles.GREEN) + "\n\n")
+        print(style("    [W] Up    [S] Down    [ENTER] Select    [A] About", styles.GREEN) + "\n")
         print(TITLE_ART)
+        print(
+            style(style("\n\n    Current vocabulary base: ", styles.BOLD), styles.YELLOW) + 
+            style(settings.get(settings.KEY_SELECTED_DB), styles.YELLOW)
+            )
         print(menu_items(selected_item))
         key = getch()
         if key == b'w' or key == b'W':
@@ -242,8 +248,10 @@ def menu(vocabbase_instance: VocabBase):
             selected_item = min(3, selected_item + 1)
         elif key == b'\r':
             if selected_item == 0:
+                reload_vocabbase()
                 start_learning()
             elif selected_item == 1:
+                reload_vocabbase()
                 add_words()
             elif selected_item == 2:
                 setting_page()

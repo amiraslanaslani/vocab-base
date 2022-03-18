@@ -58,7 +58,7 @@ class AbstractController(ABC):
     def __init__(self, settings: Settings) -> None:
         super().__init__()
         self.settings = settings
-        self.value = self.settings.get(self.key)
+        self.value = self.settings.get(self.get_key())
 
     def save(self) -> None:
         self.settings.set(self.get_key(), self.get_value())
@@ -66,8 +66,9 @@ class AbstractController(ABC):
     def get_value(self):
         return self.value
 
+    @staticmethod
     @abstractmethod
-    def get_key(self) -> str:
+    def get_key() -> str:
         pass
 
     @abstractmethod

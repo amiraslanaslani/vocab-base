@@ -11,7 +11,8 @@ class MinActiveWordsController(AbstractController):  # KEY_MIN_ACTIVE_WORDS
         self.value = max(self.value - 1, 0)
         return self.value
 
-    def get_key(self) -> str:
+    @staticmethod
+    def get_key() -> str:
         return Settings.KEY_MIN_ACTIVE_WORDS
 
 
@@ -24,7 +25,8 @@ class FinalStageController(AbstractController):  # KEY_FINAL_STAGE
         self.value = max(self.value - 1, 0)
         return self.value
 
-    def get_key(self) -> str:
+    @staticmethod
+    def get_key() -> str:
         return Settings.KEY_FINAL_STAGE
 
 
@@ -51,6 +53,7 @@ class SelectedDBController(AbstractController):  # KEY_SELECTED_DB
             self.value = dbs[0]
         return self.value
 
-    def get_key(self) -> str:
+    @staticmethod
+    def get_key() -> str:
         return Settings.KEY_SELECTED_DB
 

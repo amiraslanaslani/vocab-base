@@ -1,12 +1,15 @@
 from msvcrt import getch
 
+from patinput import patinput
+
 from version import __version__
 from setting.setting import SettingValueController, Settings
 from setting.controllers import FinalStageController, MinActiveWordsController, SelectedDBController
 from cli.style import style, styles
-from cli.utils import clear, get_details
+from cli.utils import check_equal_char, clear, get_details
 from vocabbase import vocabbase
 from vocabbase.vocabbase import VocabBase
+
 
 AMAZING_ART = """
    $$$$$$\\                                    $$\\                     $$\\ 
@@ -174,12 +177,6 @@ def setting_page():
     svc.add_controller(MinActiveWordsController)
     svc.add_controller(FinalStageController)
     svc.add_controller(SelectedDBController)
-    
-    keys = [
-        settings.KEY_MIN_ACTIVE_WORDS,
-        settings.KEY_FINAL_STAGE,
-        settings.KEY_SELECTED_DB,
-    ]
 
     def menu_items(item: int):
         items_detail = ["", "", ""]
@@ -188,13 +185,13 @@ def setting_page():
         return f"    {items[0]} Minimum active words at the moment       [ {svc.get(0).get_value():2} ]\n" + \
                f"    {items[1]} Final stage of a learned word            [ {svc.get(1).get_value():2} ]\n" + \
                f"    {items[2]} Selected VB (vocab base)                 [ {svc.get(2).get_value():2} ]\n" , items_detail[item]
-
+    
     selected_item = 0
     message = ""
     while True:
         clear()
         print(style(
-            "    [ESC] Main menu    [SPACE] Save    [W] Up    [S] Down\n    [A] Decrease Value   [D] Increase Value",
+            "    [ESC] Main menu    [SPACE] Save    [W] Up    [S] Down\n    [A] Decrease Value   [D] Increase Value   [C] Custom Value",
             styles.GREEN
         ) + "\n\n")
         print(SETTING_ART)
@@ -203,19 +200,31 @@ def setting_page():
         items, desc = menu_items(selected_item)
         print(items + "\n\n\n" + desc)
         key = getch()
-        if key == b'w' or key == b'W':
+        if check_equal_char(key, 'w'):
             selected_item = max(0, selected_item - 1)
-        elif key == b's' or key == b'S':
+        elif check_equal_char(key, 's'):
             selected_item = min(2, selected_item + 1)
-        elif key == b'a' or key == b'A':  # decrease value
+        elif check_equal_char(key, 'a'):  # decrease value
             svc.get(selected_item).previous()
             message = style("    Your changes are not saved, yet.", styles.RED)
-        elif key == b'd' or key == b'D':  # increase value
+        elif check_equal_char(key, 'd'):  # increase value
             svc.get(selected_item).next()
             message = style("    Your changes are not saved, yet.", styles.RED)
         elif key == b' ':  # Save
             svc.save()
             message = style("    Changes are saved successfully!", styles.GREEN)
+        elif check_equal_char(key, 'c'):
+            print(style("       [ESC] Cancel", styles.GREEN) + "            New value: ", end="", flush=True)
+            controller = svc.get(selected_item)
+            interrupt = lambda key, cursor_pos, inp: key == b'\x1b'[0]
+            new_value = patinput(
+                allowness=controller.value_patinput_pattern(), 
+                default=str(controller.get_value()), 
+                interrupt=interrupt
+            )
+            if (new_value is not None) and (new_value != ""):
+                controller.value = controller.from_string(new_value)
+                message = style("    Your changes are not saved, yet.", styles.RED)
         elif key == b'\x1b':
             return
 
@@ -242,9 +251,9 @@ def menu():
             )
         print(menu_items(selected_item))
         key = getch()
-        if key == b'w' or key == b'W':
+        if check_equal_char(key, 'w'):
             selected_item = max(0, selected_item - 1)
-        elif key == b's' or key == b'S':
+        elif check_equal_char(key, 's'):
             selected_item = min(3, selected_item + 1)
         elif key == b'\r':
             if selected_item == 0:
@@ -259,5 +268,5 @@ def menu():
                 clear()
                 print("Bye Bye...")
                 break
-        elif key == b'a' or key == b'A':
+        elif check_equal_char(key, 'a'):
             about_page()

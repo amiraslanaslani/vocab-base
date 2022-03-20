@@ -30,3 +30,6 @@ def get_details(word: vocabbase.Word):
 
     main_str = f"\n\n    {style(word.word.title(), styles.BOLD)}       {phonetic}\n\n\n"
     return main_str, meanings
+
+def check_equal_char(char, should_be: str):
+    return (char == bytes(should_be.lower(), 'ascii')) or (char == bytes(should_be.upper(), 'ascii'))

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type
+from typing import Callable, Type
 from tinydb import TinyDB, Query
 
 
@@ -78,6 +78,15 @@ class AbstractController(ABC):
     @abstractmethod
     def previous(self):
         pass
+    
+    @abstractmethod
+    def from_string(self, string: str):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def value_patinput_pattern(self) -> Callable[[int, int, str], bool]:
+        pass
 
 
 class SettingValueController:
@@ -89,7 +98,7 @@ class SettingValueController:
     def add_controller(self, controller: Type[AbstractController]):
         self.__controllers[controller.get_key()] = controller(self.settings)
 
-    def get(self, key):
+    def get(self, key) -> AbstractController:
         if isinstance(key, int):
             return list(self.__controllers.values())[key]
         else:

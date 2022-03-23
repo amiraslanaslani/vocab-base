@@ -17,6 +17,10 @@ def get_details(word: vocabbase.Word):
     else:
         phonetic = ""
 
+    description = ""
+    if 'description' in word.data:
+        description = word.data['description']
+
     meanings = ""
     if 'meanings' in word.data:
         for meaning in word.data['meanings']:
@@ -29,7 +33,7 @@ def get_details(word: vocabbase.Word):
             meanings += "\n"
 
     main_str = f"\n\n    {style(word.word.title(), styles.BOLD)}       {phonetic}\n\n\n"
-    return main_str, meanings
+    return main_str, meanings, description
 
 def check_equal_char(char, should_be: str):
     return (char == bytes(should_be.lower(), 'ascii')) or (char == bytes(should_be.upper(), 'ascii'))

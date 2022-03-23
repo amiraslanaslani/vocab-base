@@ -1,4 +1,5 @@
 from msvcrt import getch
+from os import sep
 
 from patinput import patinput
 
@@ -94,7 +95,7 @@ def start_learning():
             styles.GREEN) + "\n\n"
         )
 
-        main_str, meanings = get_details(word)
+        main_str, meanings, descitpions = get_details(word)
         print(main_str)
         prev = getch()
         meaning_shown = False
@@ -111,7 +112,14 @@ def start_learning():
                     word.show(True)
                     break
                 elif new == b' ' and not meaning_shown:  # SPACE
-                    print(meanings)
+                    if descitpions:
+                        print(style(style("    Descriptions:", styles.YELLOW), styles.BOLD))
+                        print("    " + descitpions + "\n\n")
+
+                    if meanings:
+                        print(style(style("    API Dictionary:", styles.YELLOW), styles.BOLD))
+                        print(meanings)
+
                     meaning_shown = True
             prev = new
     clear()
@@ -120,9 +128,37 @@ def start_learning():
     input("    Press any key to continue...")
 
 
+api_completion = True
+custom_description = False
+to_enable_disable = lambda e: 'Enable' if e else 'Disable'
+
+
+def get_toggles_status():
+    return style(f"API Completion [ {to_enable_disable(api_completion)} ]    Custom Description [ {to_enable_disable(custom_description)} ]\n", styles.YELLOW)
+
+
 def add_words():
     def strip_word(w: str):
         return w.lower().strip()
+
+    def check_toggle_ascii(b) -> bool:
+        update_status = lambda: print("\033[s", "\033[11;5H", "\033[0K", get_toggles_status(), "\033[u", end="", sep="")
+
+        global api_completion, custom_description
+        if b == 1:
+            api_completion = not api_completion
+            update_status()
+            return True
+        elif b == 2:
+            custom_description = not custom_description
+            update_status()
+            return True
+        else:
+            return False
+
+    def interrupt(b, cursor_pos, inp):
+        check_toggle_ascii(b)
+        return False
 
     def intr(w: str) -> int:
         if w == "":
@@ -135,13 +171,15 @@ def add_words():
         return 0
 
     def get_words():
-        w = strip_word(input("    Enter your word: "))
+        input_str = patinput(prompt="    Enter your word: ", interrupt=interrupt)
+        w = strip_word(input_str)
         intr_result = intr(w)
         if intr_result == 1:
             return "+", "-", True
         elif intr_result == -1:
             return get_words()
-        r = strip_word(input("    Enter your word, again: "))
+        input_str = patinput(prompt="    Enter your word, again: ", interrupt=interrupt)
+        r = strip_word(input_str)
         intr_result = intr(r)
         if intr_result == 1:
             return "+", "-", True
@@ -151,8 +189,10 @@ def add_words():
 
     while True:
         clear()
+        print(style("    [CTRL-A] Toggle API Completion    [CTRL-B] Toggle Custom Description", styles.GREEN))
         print(style("    Left fields empty to show menu choices.", styles.GREEN))
-        print(TITLE_ART + "\n\n")
+        print(TITLE_ART + "\n")
+        print("    " + get_toggles_status())
 
         word, repeat, inter = get_words()
         while word != repeat:
@@ -162,7 +202,13 @@ def add_words():
             print(style("    Inputs are not match.", styles.RED))
             word, repeat, inter = get_words()
 
-        if vb.add(word):
+        if custom_description:
+            print("\n    Please enter your description about this word:")
+            desciptin_value = input("    ").strip()
+        else:
+            desciptin_value = ""
+
+        if vb.add(word, api_completion, desciptin_value):
             print(f"    Word `{word}` added to vocab base successfully.")
         else:
             print(f"    Word `{word}` is exists in vocab base, already!")

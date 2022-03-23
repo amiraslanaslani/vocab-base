@@ -16,10 +16,18 @@ class VocabBase:
     def __strip_word(word: str):
         return word.lower().strip()
 
-    def add(self, word: str) -> bool:
+    def add(self, word: str, api_completion_needed: bool = True, description: str = "") -> bool:
         word = self.__strip_word(word)
         if not self.db.contains(self.q.word == word):
-            self.db.insert({'word': word, 'shown': False, 'stage': 0})
+            data = {
+                'word': word, 
+                'shown': False, 
+                'stage': 0, 
+                'api_completion_needed': api_completion_needed
+            }
+            if description.strip():
+                data['description'] = description.strip()
+            self.db.insert(data)
             return True
         return False
 
@@ -79,7 +87,7 @@ class Word:
         self.vb = vocab_base
         self.data = data
         self.stage = data['stage']
-        if not ('api_completion' in data):
+        if ('api_completion' not in data) or (('api_completion_needed' in data) and data['api_completion_needed']):
             self.complete_from_api()
 
     def update(self, updates: dict):

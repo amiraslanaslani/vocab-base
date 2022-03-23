@@ -59,7 +59,7 @@ class WordSelector:
         needed = max(self.active_words - len(rlist), 0)
         if needed > 0:
             result = self.vb.db.search((self.vb.q.shown == False))
-            choices = random.choices(result, k=min(needed, len(result)))
+            choices = random.sample(result, k=min(needed, len(result)))
             rlist += choices
         random.shuffle(rlist)
         self.lists[id] = [Word(word, self.vb) for word in rlist]

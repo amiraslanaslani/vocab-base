@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime
 import random
+from typing import Callable, Union
 
 from tinydb import TinyDB, Query
 
@@ -37,7 +38,7 @@ class VocabBase:
 
     def remove(self, word: str):
         word = self.__strip_word(word)
-        self.db.remove(self.q.name == word)
+        self.db.remove(self.q.word == word)
 
     def get(self, word: str):
         word = self.__strip_word(word)
@@ -82,17 +83,20 @@ class WordSelector:
 
 
 class Word:
-    def __init__(self, data: dict, vocab_base: VocabBase):
+    def __init__(self, data: dict, vocab_base: VocabBase, load=True):
         self.word = data['word']
         self.vb = vocab_base
         self.data = data
         self.stage = data['stage']
-        if ('api_completion' not in data) or (('api_completion_needed' in data) and data['api_completion_needed']):
+        if load and (('api_completion' not in data) or (('api_completion_needed' in data) and data['api_completion_needed'])):
             self.complete_from_api()
 
-    def update(self, updates: dict):
+    def update(self, updates: Union[dict, Callable]):
         self.vb.update(self.word, updates)
-        self.data.update(updates)
+        if callable(updates):
+            updates(self.data)
+        else:
+            self.data.update(updates)
 
     def complete_from_api(self):
         updates = API_DATA_RETRIEVER(self.word)
@@ -121,6 +125,12 @@ class Word:
     def __str__(self):
         return f"Word({self.word})"
 
+    def __lt__(self, other):
+        return self.word < other.word
+
+    def __eq__(self, other):
+        return self.word == other.word
+
     def __repr__(self):
         return self.__str__()
 
@@ -134,6 +144,8 @@ if __name__ == "__main__":
     vb.add("Draft")
     vb.add("Walk")
     vb.add("Magic")
+    list = [Word(word, vb) for word in vb.db.all()]
+    print(sorted(list))
     ws = WordSelector(vb, 5, 3)
     for idx, word in enumerate(ws.iterate_list()):
         print(idx, word)

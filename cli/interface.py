@@ -85,7 +85,7 @@ class MainMenu(MenuModule):
             if check_equal_char(key, 'w'):
                 selected_item = max(0, selected_item - 1)
             elif check_equal_char(key, 's'):
-                selected_item = min(3, selected_item + 1)
+                selected_item = min(len(self.modules) - 1, selected_item + 1)
             elif key == b'\r':
                 selected_module = self.modules[selected_item]
                 self._reload_vocabbase()

@@ -88,7 +88,8 @@ class Word:
         self.vb = vocab_base
         self.data = data
         self.stage = data['stage']
-        if load and (('api_completion' not in data) or (('api_completion_needed' in data) and data['api_completion_needed'])):
+        self.api_completion_needed = bool(data['api_completion_needed'])
+        if load and ('api_completion' not in data) and data['api_completion_needed']:
             self.complete_from_api()
 
     def update(self, updates: Union[dict, Callable]):

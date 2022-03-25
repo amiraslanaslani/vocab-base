@@ -22,7 +22,7 @@ def get_details(word: vocabbase.Word):
         description = word.data['description']
 
     meanings = ""
-    if 'meanings' in word.data:
+    if word.api_completion_needed and ('meanings' in word.data):
         for meaning in word.data['meanings']:
             definition_str = ""
             for definition in meaning['definitions']:

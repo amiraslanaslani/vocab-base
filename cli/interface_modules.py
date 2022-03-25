@@ -303,15 +303,15 @@ class SettingPage(MenuModule):
 
 
 class ManageWords(MenuModule):
-    _show_from_top = 2
-    _show_from_bottom = 10
+    _show_from_top = 5
+    _show_from_bottom = 15
 
     @staticmethod
     def get_title() -> str:
         return "Manage Words"
 
     def words_list_show(self, wlist: List, selected_index: int, selected_column: int):
-        print(style(f"    {'-':5} {'Word':20} {'Description':18} {'Next Appearance':23} {'Stage':5}", styles.YELLOW))
+        print(style(f"    {'-':5} {'Word':20} {'Description':15} {'Next Appearance':21} {'Stage':7} {'Dictionary API':15}", styles.YELLOW))
         if len(wlist) == 0:
             print("Empty List")
             return
@@ -328,7 +328,14 @@ class ManageWords(MenuModule):
             if "description" in word.data:
                 desc = "[Editable]"
 
-            p_id, p_word, p_desc, p_next, p_stage = f"{idx+1:<5}", f" {word.word:20}", f" {desc:18}", f" {next_show:23}", f" {word.stage:<5}"
+            p_id, p_word, p_desc, p_next, p_stage, p_api = (
+                f"{idx+1:<5}", 
+                f" {word.word:20}", 
+                f" {desc:15}", 
+                f" {next_show:21}", 
+                f" {word.stage:<7}",
+                f" {'[Enable]' if word.api_completion_needed else '[Disable]':15}"
+            )
             if idx == selected_index:
                 c_styles = [styles.BG_GREY]
                 if selected_column == 0:
@@ -339,8 +346,10 @@ class ManageWords(MenuModule):
                     p_next = style(p_next, c_styles) + styles.BG_WHITE + styles.BLACK
                 elif selected_column == 3:
                     p_stage = style(p_stage, c_styles) + styles.BG_WHITE + styles.BLACK
+                elif selected_column == 4:
+                    p_api = style(p_api, c_styles) + styles.BG_WHITE + styles.BLACK
 
-            row = f"    {p_id}{p_word}{p_desc:18}{p_next:23}{p_stage:<5}    "
+            row = f"    {p_id}{p_word}{p_desc}{p_next}{p_stage}{p_api}    "
             if idx == selected_index:
                 row = style(row, [styles.BG_WHITE, styles.BLACK])
             print(row)
@@ -356,24 +365,24 @@ class ManageWords(MenuModule):
             current_list = all_words_list if search_for.strip() == "" else list(filter(lambda k: search_for in k.word, all_words_list))
             clear()
             print(style(
-                "    [ESC] Main menu    [W] Up    [S] Down    [A] Left   [D] Right\n    [Q] Search    [C] Edit/Toggle Value    [Z] Delete Word",
+                "    [ESC] Main menu    [W] Up    [S] Down    [A] Left   [D] Right    [Q] Search\n    [C] Edit/Toggle Value    [Z] Delete Word",
                 styles.GREEN
             ) + "\n")
 
             if searching:
-                print(style(f"    Search for: {'':63}", [styles.BG_YELLOW, styles.BLACK]), end="")
+                print(style(f"    Search for: {'':80}", [styles.BG_YELLOW, styles.BLACK]), end="")
                 print()
             elif search_for.strip() == "":
                 print()
             else:
-                print(style(f"    Search for: {search_for:63}", [styles.BG_YELLOW, styles.BLACK]))
+                print(style(f"    Search for: {search_for:80}", [styles.BG_YELLOW, styles.BLACK]))
 
             self.words_list_show(current_list, selected_index, selected_column)
             print("\n\n\n")
 
             if searching:
                 print("\033[4;0H", end="")
-                print(style(f"    Search for: {'':63}", [styles.BG_YELLOW, styles.BLACK]), end="")
+                print(style(f"    Search for: {'':80}", [styles.BG_YELLOW, styles.BLACK]), end="")
                 print("\033[4;17H", end="")
                 search_for_new = patinput(default=search_for)
                 searching = False
@@ -382,7 +391,7 @@ class ManageWords(MenuModule):
                     search_for = search_for_new
                 continue
             
-            selected_word = current_list[selected_index]
+            selected_word = current_list[selected_index] if selected_index < len(current_list) else None
             
             key = getch()
             if check_equal_char(key, 'w'):
@@ -392,7 +401,7 @@ class ManageWords(MenuModule):
             elif check_equal_char(key, 'a'):
                 selected_column = max(0, selected_column - 1)
             elif check_equal_char(key, 'd'):
-                selected_column = min(3, selected_column + 1)
+                selected_column = min(4, selected_column + 1)
             elif check_equal_char(key, 'q'):
                 searching = True
             elif key == b'\x1b':
@@ -403,30 +412,34 @@ class ManageWords(MenuModule):
                     selected_word.remove()
                     all_words_list = load_all_words_list()
             elif check_equal_char(key, 'c'):
-                if selected_column == 0:
-                    new_value = patinput(prompt="    Edit Word: ", default=selected_word.word)
-                    selected_word.update({'word': new_value})
-                elif selected_column == 1:
-                    if "description" in selected_word.data:
-                        default_val = selected_word.data["description"]
-                        prompt = "    Edit Description: "
-                    else:
-                        default_val = ""
-                        prompt = "    Add Description: "
-                    new_value = patinput(prompt=prompt, default=default_val)
-                    if new_value.strip() == "":
-                        selected_word.update(delete('description'))
-                    else:
-                        selected_word.update({'description': new_value})
-                elif selected_column == 2:
-                    if "next_show" in selected_word.data:
-                        default_val = str(selected_word.data['next_show'])
-                    else:
-                        default_val = ""
-                    new_value = patinput(prompt="    Edit Next Appearance: ", default=default_val, allowness=ALOW_NUMBERS)
-                    if new_value.strip() != "":
-                        selected_word.update({'next_show': int(new_value)})
-                elif selected_column == 3:
-                    new_value = patinput(prompt="    Edit Stage: ", default=str(selected_word.stage), allowness=ALOW_NUMBERS)
-                    selected_word.update({'stage': int(new_value)})
-                all_words_list = load_all_words_list()
+                if selected_word is not None:
+                    if selected_column == 0:
+                        new_value = patinput(prompt="    Edit Word: ", default=selected_word.word)
+                        selected_word.update({'word': new_value})
+                    elif selected_column == 1:
+                        if "description" in selected_word.data:
+                            default_val = selected_word.data["description"]
+                            prompt = "    Edit Description: "
+                        else:
+                            default_val = ""
+                            prompt = "    Add Description: "
+                        new_value = patinput(prompt=prompt, default=default_val)
+                        if new_value.strip() == "":
+                            selected_word.update(delete('description'))
+                        else:
+                            selected_word.update({'description': new_value})
+                    elif selected_column == 2:
+                        if "next_show" in selected_word.data:
+                            default_val = str(selected_word.data['next_show'])
+                        else:
+                            default_val = ""
+                        new_value = patinput(prompt="    Edit Next Appearance: ", default=default_val, allowness=ALOW_NUMBERS)
+                        if new_value.strip() != "":
+                            selected_word.update({'next_show': int(new_value)})
+                    elif selected_column == 3:
+                        new_value = patinput(prompt="    Edit Stage: ", default=str(selected_word.stage), allowness=ALOW_NUMBERS)
+                        selected_word.update({'stage': int(new_value)})
+                    elif selected_column == 4:
+                        selected_word.update({'api_completion_needed': not selected_word.api_completion_needed})
+                    all_words_list = load_all_words_list()
+

@@ -225,7 +225,8 @@ class StartLearning(MenuModule):
         clear()
         print(f"\n{self.AMAZING_ART}\n\n\n    Good job! You've done all of what you should do.\n ")
         print("    See you tomorrow MASTER!\n\n\n")
-        input("    Press any key to continue...")
+        print("    Press any key to continue...")
+        getch()
 
 
 class SettingPage(MenuModule):
@@ -313,10 +314,13 @@ class ManageWords(MenuModule):
     def words_list_show(self, wlist: List, selected_index: int, selected_column: int):
         print(style(f"    {'-':5} {'Word':20} {'Description':15} {'Next Appearance':21} {'Stage':7} {'Dictionary API':15}", styles.YELLOW))
         if len(wlist) == 0:
-            print("Empty List")
+            print()
+            inner_text = style(f"{'Empty List':^40}", [styles.BG_YELLOW, styles.BLACK])
+            print(f"                            {inner_text}")
             return
-        from_idx = max(selected_index - self._show_from_top, 0)
-        to_idx = min(selected_index + self._show_from_bottom, len(wlist))
+        from_top_index = selected_index - self._show_from_top
+        from_idx = max(from_top_index, 0)
+        to_idx = min(selected_index + self._show_from_bottom + (-from_top_index if from_top_index < 0 else 0), len(wlist))
         wlist_4_show = wlist[from_idx: to_idx]
         for word, idx in zip(wlist_4_show, range(from_idx, to_idx)):
             next_show = ""
@@ -378,7 +382,7 @@ class ManageWords(MenuModule):
                 print(style(f"    Search for: {search_for:80}", [styles.BG_YELLOW, styles.BLACK]))
 
             self.words_list_show(current_list, selected_index, selected_column)
-            print("\n\n\n")
+            print("\n")
 
             if searching:
                 print("\033[4;0H", end="")
@@ -391,7 +395,7 @@ class ManageWords(MenuModule):
                     search_for = search_for_new
                 continue
             
-            selected_word = current_list[selected_index] if selected_index < len(current_list) else None
+            selected_word = current_list[selected_index] if (selected_index > 0 and selected_index < len(current_list)) else None
             
             key = getch()
             if check_equal_char(key, 'w'):

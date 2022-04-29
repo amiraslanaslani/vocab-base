@@ -480,6 +480,11 @@ class Statistics(MenuModule):
         num.append(tmp)
 
         sum_of_num = sum(num)
+        if sum_of_num == 0:
+            print("    " + style(f"{'No Data':^40}", [styles.BG_YELLOW, styles.BLACK]))
+            key = getch()
+            return
+
         len = 40
         bars_list = []
         for n in num:

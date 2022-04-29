@@ -1,5 +1,6 @@
 from datetime import datetime
 from msvcrt import getch
+import operator
 from typing import List
 
 from patinput import patinput
@@ -447,3 +448,45 @@ class ManageWords(MenuModule):
                         selected_word.update({'api_completion_needed': not selected_word.api_completion_needed})
                     all_words_list = load_all_words_list()
 
+
+class Statistics(MenuModule):
+    @staticmethod
+    def get_title() -> str:
+        return "Statistics"
+
+    def get_number_from_stage(self, op=operator.lt, stage: int=0):
+        if stage == 0 and op == operator.eq:
+            return len(self.vb.db.all()) - self.get_number_from_stage(operator.gt, 0)
+        return len(self.vb.db.search(op(self.vb.q.stage, stage)))
+
+    def show(self) -> None:
+        clear()
+        print(style(
+            "    [ANY KEY] Back to Menu\n",
+            styles.GREEN) + "\n"
+        )
+        content = []
+        num = []
+        final_stage = self.settings.get(self.settings.KEY_FINAL_STAGE)
+        tmp = self.get_number_from_stage(operator.eq, 0)
+        content.append(f"    {'Unlearned':10}  {tmp:5}   ")
+        num.append(tmp)
+        for i in range(1, final_stage + 1):
+            tmp = self.get_number_from_stage(operator.eq, i)
+            content.append(f"    {f'Stage {i}':10}  {tmp:5}   ")
+            num.append(tmp)
+        tmp = self.get_number_from_stage(operator.gt, final_stage)
+        content.append(f"    {'Finished':10}  {tmp:5}   ")
+        num.append(tmp)
+
+        sum_of_num = sum(num)
+        len = 40
+        bars_list = []
+        for n in num:
+            bars = n * len / sum_of_num
+            bar = "|" + "█" * int(bars) + f"  {n / sum_of_num:.1}%"
+            bars_list.append(bar)
+
+        for line, bar in zip(content, bars_list):
+            print(line + bar)
+        key = getch()

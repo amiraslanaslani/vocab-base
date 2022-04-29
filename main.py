@@ -1,5 +1,5 @@
 from cli.interface import MainMenu
-from cli.interface_modules import Exit, About, AddNewWords, StartLearning, SettingPage, ManageWords
+from cli.interface_modules import Exit, About, AddNewWords, StartLearning, SettingPage, ManageWords, Statistics
 from vocabbase import vocabbase
 from vocabbase.api_word_data_retriever import dictionaryapi_dev
 
@@ -8,6 +8,7 @@ if __name__ == "__main__":
     menu = MainMenu(About)  # CLI menu
     menu.add_module(StartLearning)
     menu.add_module(ManageWords)
+    menu.add_module(Statistics)
     menu.add_module(AddNewWords)
     menu.add_module(SettingPage)
     menu.add_module(Exit)

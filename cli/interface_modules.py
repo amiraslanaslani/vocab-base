@@ -396,7 +396,7 @@ class ManageWords(MenuModule):
                     search_for = search_for_new
                 continue
             
-            selected_word = current_list[selected_index] if (selected_index > 0 and selected_index < len(current_list)) else None
+            selected_word = current_list[selected_index] if (selected_index >= 0 and selected_index < len(current_list)) else None
             
             key = getch()
             if check_equal_char(key, 'w'):
@@ -430,7 +430,8 @@ class ManageWords(MenuModule):
                             prompt = "    Add Description: "
                         new_value = patinput(prompt=prompt, default=default_val)
                         if new_value.strip() == "":
-                            selected_word.update(delete('description'))
+                            if default_val != "":
+                                selected_word.update(delete('description'))
                         else:
                             selected_word.update({'description': new_value})
                     elif selected_column == 2:
@@ -489,7 +490,7 @@ class Statistics(MenuModule):
         bars_list = []
         for n in num:
             bars = n * len / sum_of_num
-            bar = "|" + "█" * int(bars) + f"  {n / sum_of_num:.1}%"
+            bar = "|" + "█" * int(bars) + f"  {n * 100 / sum_of_num:.1f}%"
             bars_list.append(bar)
 
         for line, bar in zip(content, bars_list):
